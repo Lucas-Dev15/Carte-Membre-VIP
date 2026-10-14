@@ -21,6 +21,8 @@ async function main() {
   if (!apiKey) throw new Error("PASS_STUDIO_API_KEY manquante");
   const baseUrl = (process.env.PASS_STUDIO_BASE_URL ?? "https://www.passstudio.online/api/v1").replace(/\/$/, "");
   const siteUrl = (process.env.PUBLIC_SITE_URL ?? "https://rendezvousia.fr").replace(/\/$/, "");
+  // Images du pass : par défaut sur le site ; PASS_STUDIO_ASSET_BASE_URL si le site n'est pas encore en ligne.
+  const assetBaseUrl = process.env.PASS_STUDIO_ASSET_BASE_URL || undefined;
   const args = process.argv.slice(2);
   const passType = "custom"; // validé : seul type qui accepte nos champs libres
 
@@ -43,7 +45,7 @@ async function main() {
       status: "draft",
       sendInviteEmail: false, // nos e-mails partent de notre plateforme
       clientRequestId: `rdvia-carte-membre-${passType}-v1`, // relancer le script ne crée pas de doublon
-      design: passDesign(siteUrl),
+      design: passDesign(siteUrl, assetBaseUrl),
     });
     passId = body.pass.passId;
     console.log(`Modèle ${body.alreadyExisted ? "existant" : "créé"} : ${passId}`);

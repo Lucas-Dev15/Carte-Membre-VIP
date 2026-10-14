@@ -1,8 +1,11 @@
 import type { PassDesign } from "./passstudio";
 
-/** Design du pass (§3.2). Images en PNG https public, hébergées sur notre domaine. */
-export function passDesign(siteUrl: string): PassDesign {
-  const asset = (f: string) => `${siteUrl}/wallet/${f}`;
+/**
+ * Design du pass (§3.2). Images en PNG https public, hébergées sur notre domaine
+ * (`${siteUrl}/wallet/…`), ou sur `assetBaseUrl` tant que le site n'est pas en ligne.
+ */
+export function passDesign(siteUrl: string, assetBaseUrl = `${siteUrl}/wallet`): PassDesign {
+  const asset = (f: string) => `${assetBaseUrl.replace(/\/$/, "")}/${f}`;
   return {
     backgroundColor: "#3540D8",
     foregroundColor: "#FFFFFF",
