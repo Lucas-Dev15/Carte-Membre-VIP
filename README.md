@@ -38,12 +38,12 @@ Le build a été vérifié : ni la clé ni l'URL de l'API ne figurent dans `.nex
 
 1. Héberger `public/wallet/*.png` en https public (servis par le site : `https://rendezvousia.fr/wallet/…`).
    The Pass Studio télécharge les images, les vérifie et les redimensionne (icône 87×87, logo ≤ 480×150, bandeau 1125×432).
-2. Créer le modèle **dans l'éditeur The Pass Studio**, en type **Custom** (voir écart n° 1), distribution `unique`,
+2. Créer le modèle **dans l'éditeur The Pass Studio**, en type **Custom**, distribution `unique`, sans texte sous le QR,
    avec le design de `lib/wallet/design.ts`. Placer les champs du §3.3 avec exactement ces libellés :
    NIVEAU, MES VOLTS, PROGRESSION, MEMBRE, VILLE, PROCHAINE CONFÉRENCE, LE, MEMBRE DEPUIS, CODE MEMBRE,
    PROCHAINE CONFÉRENCE (VERSO), GAGNER DES VOLTS.
    (`npm run wallet:setup` sans `PASS_STUDIO_PASS_ID` crée le brouillon par l'API, mais les champs se placent dans l'éditeur.)
-3. `PASS_STUDIO_PASS_ID=… npm run wallet:setup` : désactive l'e-mail d'invitation de The Pass Studio, liste les clés
+3. `PASS_STUDIO_PASS_ID=… npm run wallet:setup` : masque le texte sous le QR, désactive l'e-mail d'invitation de The Pass Studio, liste les clés
    du pass, les retrouve par leur libellé et affiche la valeur de `PASS_STUDIO_FIELD_KEYS` à mettre dans l'environnement.
 4. `npm run wallet:setup -- --set-howto` écrit le texte « Gagner des volts » (champ commun à tous, 1 crédit).
 5. `npm run wallet:setup -- --publish` publie le modèle (**10 crédits**, une seule fois).
@@ -102,16 +102,18 @@ Vérifié dans la documentation The Pass Studio (integrations, errors, rate-limi
 - `sendInviteEmail: false` sur le pass : The Pass Studio n'envoie jamais d'e-mail, c'est notre plateforme qui le fait.
 - Nos propres `X-Request-Id` (`rdvia_sync_…`, `rdvia_issue_…`) sont envoyés pour relier nos journaux aux leurs.
 
-**À valider avec toi :**
+**Décisions prises :**
 
-1. **Type de pass : `custom` au lieu de `loyalty`.** Les types structurés (loyalty, coupon, event, generic) utilisent
-   des clés de champ documentées (`memberName`, `points`, `tier`…). Seul le type **Custom** permet nos 11 champs libres.
-   Ses clés sont générées par l'éditeur (`field_1787677019449`), d'où `PASS_STUDIO_FIELD_KEYS`.
-   Une clé inconnue fait échouer tout l'appel (400 `unknown_field_key`) : rien ne part à moitié rempli.
-   À vérifier dans l'éditeur : le placement en-tête / principal sur le bandeau / secondaires / auxiliaires / verso.
-2. **Texte sous le QR.** La doc ne prévoit pas de texte alternatif sous le code : avec `showBarcodeText: true`,
-   c'est la valeur encodée (l'URL `https://rendezvousia.fr/carte/RVIA-…`) qui s'affichera. Le QR garde l'URL, comme demandé.
-   Options : laisser l'URL, ou `showBarcodeText: false` et compter sur le champ CODE MEMBRE.
+1. **Type de pass : Custom** (validé). Les types structurés (loyalty, coupon, event, generic) n'acceptent que des clés
+   documentées (`memberName`, `points`, `tier`…) ; seul Custom permet nos 11 champs libres. Ses clés sont générées
+   par l'éditeur (`field_1787677019449`), d'où `PASS_STUDIO_FIELD_KEYS`. Une clé inconnue fait échouer tout l'appel
+   (400 `unknown_field_key`) : rien ne part à moitié rempli. À vérifier dans l'éditeur : le placement en-tête /
+   principal sur le bandeau / secondaires / auxiliaires / verso.
+2. **Rien sous le QR** (validé) : `showBarcodeText: false`. La doc n'a pas de texte alternatif ; ce serait l'URL.
+   Le QR encode l'URL de la carte, le code `RVIA-…` figure au verso (CODE MEMBRE).
+
+**Choix techniques à connaître :**
+
 3. **Carte régénérée.** L'émission est dédoublonnée par e-mail **avant** le `customerId`. Avec le même e-mail,
    l'API pourrait renvoyer l'ancienne instance révoquée. Une carte régénérée est donc émise **sans e-mail**, avec
    `customerId = member_<id>_<nouveau code>` (la 1re carte garde `member_<id>` + e-mail, conformément à la spec).

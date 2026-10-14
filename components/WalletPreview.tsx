@@ -47,7 +47,6 @@ export function WalletPreview({ fields, qrSvg }: { fields: PassFields; qrSvg: st
 
         <div className={styles.barcode}>
           <div className={styles.qr} dangerouslySetInnerHTML={{ __html: qrSvg }} />
-          <span className={styles.barcodeText}>{fields.memberCode}</span>
         </div>
       </div>
     </div>

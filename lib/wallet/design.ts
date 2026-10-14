@@ -14,7 +14,8 @@ export function passDesign(siteUrl: string): PassDesign {
     stripImageUrl: asset("rdvia-strip-1125x432.png"),
     // barcodeType : la doc n'en liste pas les valeurs. On le laisse à l'éditeur (QR code)
     // et on lit la valeur retenue avec GET /passes/{passId} → design.barcodeType.
-    showBarcodeText: true,
+    // Rien sous le QR : la doc n'a pas de texte alternatif, ce serait l'URL. Le code est au verso (CODE MEMBRE).
+    showBarcodeText: false,
     backWebsiteUrl: `${siteUrl}/mon-espace`,
     holderPhotoStrip: null,
     originalLanguage: "fr",

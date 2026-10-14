@@ -54,7 +54,7 @@ export interface PassDesign {
   iconUrl: string;
   stripImageUrl: string;
   barcodeType?: string;
-  showBarcodeText: boolean;
+  showBarcodeText: false;
   backWebsiteUrl: string;
   holderPhotoStrip: null;
   originalLanguage: "fr";
@@ -62,7 +62,7 @@ export interface PassDesign {
 
 export interface CreatePassInput {
   name: string;
-  passType: "loyalty" | "custom";
+  passType: "custom";
   distributionMode: "unique";
   status?: "draft" | "active";
   sendInviteEmail?: boolean;

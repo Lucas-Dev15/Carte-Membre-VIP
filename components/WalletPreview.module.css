@@ -83,7 +83,7 @@
   margin: auto auto 14px;
   background: #fff;
   border-radius: 8px;
-  padding: 8px 8px 5px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -96,12 +96,4 @@
   display: block;
   width: 100%;
   height: 100%;
-}
-.barcodeText {
-  font-family: ui-monospace, Menlo, Consolas, monospace;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 1.2px;
-  color: #111114;
-  margin-top: 3px;
 }

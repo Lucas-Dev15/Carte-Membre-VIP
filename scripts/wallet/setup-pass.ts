@@ -2,7 +2,6 @@
  * Création / vérification idempotente du modèle de pass (§5).
  *
  *   npm run wallet:setup                       crée le modèle (brouillon) si PASS_STUDIO_PASS_ID est vide, sinon le vérifie
- *   npm run wallet:setup -- --type=loyalty     type du modèle créé (défaut : custom, seul type à clés libres)
  *   npm run wallet:setup -- --set-howto        écrit le texte « Gagner des volts » (champ du modèle, 1 push = 1 crédit)
  *   npm run wallet:setup -- --publish          publie le modèle (10 crédits, une seule fois)
  *
@@ -23,7 +22,7 @@ async function main() {
   const baseUrl = (process.env.PASS_STUDIO_BASE_URL ?? "https://www.passstudio.online/api/v1").replace(/\/$/, "");
   const siteUrl = (process.env.PUBLIC_SITE_URL ?? "https://rendezvousia.fr").replace(/\/$/, "");
   const args = process.argv.slice(2);
-  const passType = args.find((a) => a.startsWith("--type="))?.slice(7) === "loyalty" ? "loyalty" : "custom";
+  const passType = "custom"; // validé : seul type qui accepte nos champs libres
 
   const client = new PassStudioClient({
     apiKey,
@@ -54,6 +53,12 @@ async function main() {
   const { body } = await client.getPass(passId);
   const pass = body.pass;
   console.log(`\n« ${pass.name} » · type ${pass.passType} · statut ${pass.status} · distribution ${pass.distributionMode}`);
+
+  const design = (pass.design ?? {}) as { showBarcodeText?: boolean };
+  if (design.showBarcodeText !== false) {
+    await client.updatePass(passId, { design: { showBarcodeText: false } });
+    console.log("Texte sous le QR masqué (design.showBarcodeText: false).");
+  }
 
   if (pass.sendInviteEmail !== false) {
     await client.updatePass(passId, { sendInviteEmail: false });
