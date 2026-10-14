@@ -12,7 +12,8 @@ export function passDesign(siteUrl: string, assetBaseUrl = `${siteUrl}/wallet`):
     labelColor: "#C9CCF4",
     organizationName: "Les RDV IA",
     description: "Carte membre Les RDV IA",
-    logoUrl: asset("rdvia-logo-480x150.png"),
+    // Logo = le carré seul : le nom « Les RDV IA » est écrit par le wallet (organizationName), sinon il apparaît deux fois.
+    logoUrl: asset("rdvia-logo-mark.png"),
     iconUrl: asset("rdvia-icon-87x87.png"),
     stripImageUrl: asset("rdvia-strip-1125x432.png"),
     // barcodeType : la doc n'en liste pas les valeurs. On le laisse à l'éditeur (QR code)
