@@ -36,7 +36,7 @@ describe("formats", () => {
 describe("niveaux", () => {
   it("correspond à la maquette", () => {
     expect(levelLabel(760)).toBe("3 · Explorateur");
-    expect(progressLabel(760)).toBe("Encore 40 volts pour Praticien");
+    expect(progressLabel(760)).toBe("Encore 40 skills pour Praticien");
     expect(progressLabel(10_000)).toBe("Niveau maximum atteint");
   });
 });
@@ -46,7 +46,7 @@ describe("champs du pass", () => {
     expect(buildPassFields(manon, "RVIA-NCY-1259")).toEqual({
       level: "3 · Explorateur",
       volts: "760",
-      progress: "Encore 40 volts pour Praticien",
+      progress: "Encore 40 skills pour Praticien",
       memberName: "Manon Blanc",
       city: "Nancy",
       nextTitle: "Créer ses visuels avec l'IA",
@@ -92,6 +92,6 @@ describe("paliers", () => {
       "1 · Curieux", "1 · Curieux", "2 · Initié", "2 · Initié", "3 · Explorateur",
       "3 · Explorateur", "4 · Praticien", "4 · Praticien", "5 · Expert",
     ]);
-    expect(progressLabel(1250)).toBe("Encore 50 volts pour Expert");
+    expect(progressLabel(1250)).toBe("Encore 50 skills pour Expert");
   });
 });

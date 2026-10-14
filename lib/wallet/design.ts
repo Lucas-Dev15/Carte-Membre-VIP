@@ -17,7 +17,7 @@ export function passDesign(siteUrl: string, assetBaseUrl = `${siteUrl}/wallet`):
     // Icône des notifications : logo « Rendez-vous IA » sur fond blanc (Pass Studio la réduit en 87×87).
     iconUrl: asset("rdvia-icon-rvia-1024.png"),
     // Type Custom : Apple n'affiche pas le bandeau (il reste l'image principale sur Google Wallet).
-    // Sur Apple, l'éclair passe en vignette, à droite de MES VOLTS.
+    // Sur Apple, l'éclair passe en vignette, à droite de MES SKILLS.
     stripImageUrl: asset("rdvia-strip-1125x432.png"),
     thumbnailUrl: asset("rdvia-thumbnail-270.png"),
     // barcodeType : la doc n'en liste pas les valeurs. On le laisse à l'éditeur (QR code)

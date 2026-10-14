@@ -21,7 +21,7 @@ export const HOLDER_FIELD_KEYS = [
 export const TEMPLATE_FIELD_KEYS = ["howTo"] as const;
 
 export const HOW_TO_TEXT =
-  "Présence +100 · Questionnaire +20 · Replay +15 · Réservation anticipée +10. Vous ne perdez jamais un volt.";
+  "Présence +100 · Questionnaire +20 · Replay +15 · Réservation anticipée +10. Vous ne perdez jamais un skill.";
 
 export type HolderFieldKey = (typeof HOLDER_FIELD_KEYS)[number];
 export type PassFields = Record<HolderFieldKey, string>;
@@ -107,7 +107,7 @@ export function toPassStudioFields(fields: Partial<PassFields>, map: FieldKeyMap
  */
 export const PASS_LAYOUT: { key: HolderFieldKey | "howTo"; label: string; position: "header" | "primary" | "secondary" | "auxiliary" | "back" }[] = [
   { key: "level", label: "NIVEAU", position: "header" },
-  { key: "volts", label: "MES VOLTS", position: "primary" },
+  { key: "volts", label: "MES SKILLS", position: "primary" },
   { key: "memberName", label: "MEMBRE", position: "secondary" },
   { key: "city", label: "VILLE", position: "secondary" },
   { key: "nextTitle", label: "PROCHAINE CONFÉRENCE", position: "auxiliary" },
@@ -116,13 +116,13 @@ export const PASS_LAYOUT: { key: HolderFieldKey | "howTo"; label: string; positi
   { key: "memberSince", label: "MEMBRE DEPUIS", position: "back" },
   { key: "memberCode", label: "CODE MEMBRE", position: "back" },
   { key: "nextFull", label: "PROCHAINE CONFÉRENCE (VERSO)", position: "back" },
-  { key: "howTo", label: "GAGNER DES VOLTS", position: "back" },
+  { key: "howTo", label: "GAGNER DES SKILLS", position: "back" },
 ];
 
 /** Libellés de la maquette (§3.3), pour retrouver les clés par libellé dans l'éditeur. */
 export const FIELD_LABELS: Record<HolderFieldKey | "howTo", string[]> = {
   level: ["NIVEAU"],
-  volts: ["MES VOLTS"],
+  volts: ["MES SKILLS", "MES VOLTS"], // « Skills » : ancien nom « Volts »
   progress: ["PROGRESSION"],
   memberName: ["MEMBRE"],
   city: ["VILLE"],
@@ -131,5 +131,5 @@ export const FIELD_LABELS: Record<HolderFieldKey | "howTo", string[]> = {
   nextFull: ["PROCHAINE CONFÉRENCE (VERSO)", "PROCHAINE CONFÉRENCE"],
   memberSince: ["MEMBRE DEPUIS"],
   memberCode: ["CODE MEMBRE"],
-  howTo: ["GAGNER DES VOLTS"],
+  howTo: ["GAGNER DES SKILLS", "GAGNER DES VOLTS"],
 };

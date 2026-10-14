@@ -136,7 +136,7 @@ async function main() {
 
   if (args.includes("--set-howto") && proposal.howTo) {
     const res = await client.updateTemplateFields(passId, { [proposal.howTo]: HOW_TO_TEXT });
-    console.log(`Texte « Gagner des volts » : ${res.body.pushSkipReason ?? (res.body.pushed ? "poussé" : "enregistré")}`);
+    console.log(`Texte « Gagner des skills » : ${res.body.pushSkipReason ?? (res.body.pushed ? "poussé" : "enregistré")}`);
   }
 
   if (args.includes("--publish")) {

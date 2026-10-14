@@ -37,7 +37,7 @@ export default async function MonEspacePage() {
               <WalletButtons installedPlatform={installed} pageQrSvg={pageQr} />
             </div>
             <p className={styles.note}>
-              Votre carte se met à jour toute seule dans le wallet : volts, niveau et prochaine conférence. Code
+              Votre carte se met à jour toute seule dans le wallet : skills, niveau et prochaine conférence. Code
               personnel : <strong className={styles.code}>{view.card.code}</strong>
             </p>
           </div>

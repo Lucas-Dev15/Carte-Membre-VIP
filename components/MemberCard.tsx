@@ -76,7 +76,7 @@ export function MemberCard(props: MemberCardProps) {
             <div className={styles.bottom}>
               <div className={styles.identity}>
                 <span className={styles.voltsPill}>
-                  ⚡ {props.volts} volts · {props.levelShort}
+                  ⚡ {props.volts} skills · {props.levelShort}
                 </span>
                 <span className={styles.name}>{props.name}</span>
                 <span className={styles.since}>Membre depuis {props.memberSince}</span>

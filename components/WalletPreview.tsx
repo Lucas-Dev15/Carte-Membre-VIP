@@ -25,7 +25,7 @@ export function WalletPreview({ fields, qrSvg }: { fields: PassFields; qrSvg: st
         {/* Pass Custom : pas de bandeau sur Apple, l'éclair est la vignette ; PROGRESSION est au verso. */}
         <div className={styles.main}>
           <div>
-            <span className={styles.label}>Mes volts</span>
+            <span className={styles.label}>Mes skills</span>
             <span className={styles.primary}>{fields.volts}</span>
           </div>
           {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -41,11 +41,11 @@ export function levelLabel(volts: number): string {
   return `${l.rank} · ${l.name}`;
 }
 
-/** « Encore 40 volts pour Praticien » ou « Niveau maximum atteint » */
+/** « Encore 40 skills pour Praticien » ou « Niveau maximum atteint » */
 export function progressLabel(volts: number): string {
   const next = nextLevel(volts);
   if (!next) return "Niveau maximum atteint";
-  return `Encore ${next.minVolts - volts} volts pour ${next.name}`;
+  return `Encore ${next.minVolts - volts} skills pour ${next.name}`;
 }
 
 /** Progression 0..1 dans le palier courant (barre de la carte web uniquement). */

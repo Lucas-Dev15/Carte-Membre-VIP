@@ -369,9 +369,9 @@ export async function onVoltsAwarded(
   if (!cardId) return;
   const delta = params.after - params.before;
   if (params.source === "attendance") {
-    await enqueueSync(ctx, cardId, "attendance", `+${delta} volts ! Vous en avez maintenant ${params.after}.`);
+    await enqueueSync(ctx, cardId, "attendance", `+${delta} skills ! Vous en avez maintenant ${params.after}.`);
   } else if (params.source === "referral") {
-    await enqueueSync(ctx, cardId, "attendance", `+${delta} volts grâce à votre filleul !`);
+    await enqueueSync(ctx, cardId, "attendance", `+${delta} skills grâce à votre filleul !`);
   } else {
     await enqueueSync(ctx, cardId, "volts_silent");
   }
