@@ -50,6 +50,16 @@ Le build a été vérifié : ni la clé ni l'URL de l'API ne figurent dans `.nex
 6. Développement : un second pass de test, avec sa propre clé API restreinte à ce pass
    (Settings → API Keys → « Restricted to passes »).
 
+## Démo sur téléphone (sans site)
+
+Avec `PASS_STUDIO_API_KEY`, `PASS_STUDIO_PASS_ID` (et `PASS_STUDIO_FIELD_KEYS`) sur un pass publié :
+
+```bash
+npm run wallet:demo -- issue    # émet la carte de Manon Blanc (1 crédit), affiche les liens Apple / Google Wallet
+npm run wallet:demo -- push     # +100 volts avec notification (1 crédit) ; 760 → 860 = passage Praticien
+npm run wallet:demo -- revoke   # révoque la carte de démo (gratuit)
+```
+
 ## Architecture
 
 | Fichier | Rôle |

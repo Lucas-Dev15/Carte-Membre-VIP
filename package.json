@@ -9,7 +9,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "wallet:setup": "tsx scripts/wallet/setup-pass.ts"
+    "wallet:setup": "tsx scripts/wallet/setup-pass.ts",
+    "wallet:demo": "tsx scripts/wallet/demo.ts"
   },
   "dependencies": {
     "next": "^15.5.4",
