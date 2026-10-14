@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { levelLabel, progressLabel } from "./levels";
-import { formatLongWhen, formatMonthYear, formatShortDate } from "./format";
+import { formatLongWhen, formatMonthYear, formatShortWhen } from "./format";
 import type { MemberSnapshot } from "./types";
 
 /** Clés par porteur créées dans l'éditeur The Pass Studio (§3.3). */
@@ -44,8 +44,7 @@ export function buildPassFields(member: MemberSnapshot, memberCode: string): Pas
     memberName: `${member.firstName} ${member.lastName}`.trim(),
     city: member.city,
     nextTitle: b ? b.conferenceTitle : "Aucune réservation",
-    // Recto : date courte, sinon le titre est coupé ; « — » plutôt qu'un texte long tronqué.
-    nextWhen: b ? formatShortDate(b.startsAt) : "—",
+    nextWhen: b ? formatShortWhen(b.startsAt) : "Réservez sur rendezvousia.fr",
     nextFull: b ? `${formatLongWhen(b.startsAt)} · ${b.venue.name}, ${b.city}` : "Aucune réservation",
     memberSince: formatMonthYear(member.createdAt),
     memberCode,

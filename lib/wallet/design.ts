@@ -12,8 +12,8 @@ export function passDesign(siteUrl: string, assetBaseUrl = `${siteUrl}/wallet`):
     labelColor: "#C9CCF4",
     organizationName: "Les RDV IA",
     description: "Carte membre Les RDV IA",
-    // Logo = le carré seul : le nom « Les RDV IA » est écrit par le wallet (organizationName), sinon il apparaît deux fois.
-    logoUrl: asset("rdvia-logo-mark.png"),
+    // Logo « Rendez-vous IA » détouré de blanc : son « D » bleu disparaîtrait sinon sur le fond #3540D8.
+    logoUrl: asset("rdvia-logo-rvia-150.png"),
     iconUrl: asset("rdvia-icon-87x87.png"),
     // Type Custom : Apple n'affiche pas le bandeau (il reste l'image principale sur Google Wallet).
     // Sur Apple, l'éclair passe en vignette, à droite de MES VOLTS.
