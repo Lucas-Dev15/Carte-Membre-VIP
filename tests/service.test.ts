@@ -20,7 +20,9 @@ function fakeApi(handler: (c: Call) => { status: number; body: unknown }) {
     const call = { method: init.method!, path: url.replace("https://api.test", ""), body: init.body ? JSON.parse(String(init.body)) : null };
     calls.push(call);
     const r = handler(call);
-    return new Response(JSON.stringify(r.body), { status: r.status, headers: { "x-request-id": "req_1" } });
+    const headers: Record<string, string> = { "x-request-id": "req_1" };
+    if (r.status === 429) headers["retry-after"] = "60";
+    return new Response(JSON.stringify(r.body), { status: r.status, headers });
   }) as unknown as typeof fetch;
   return { calls, client: new PassStudioClient({ apiKey: "ps_test", baseUrl: "https://api.test", fetchImpl }) };
 }
@@ -73,6 +75,8 @@ describe("création et émission", () => {
     expect(card.code).toMatch(/^RVIA-NCY-\d{4}$/);
     expect(card.qrUrl).toBe(`https://rendezvousia.fr/carte/${card.code}`);
     const issue = calls[0];
+    expect(issue.body.email).toBe("manon@exemple.fr");
+    expect(issue.body).not.toHaveProperty("locations"); // pas de réservation
     expect(issue.path).toBe("/passes/pass_1/issue");
     expect(issue.body).toMatchObject({ customerId: "member_m1", sendEmail: false, locale: "fr", barcodeValue: card.qrUrl });
     expect(issue.body.fields.memberCode).toBe(card.code);
@@ -112,6 +116,39 @@ describe("synchronisation", () => {
     expect(calls[0].body.fields).toMatchObject({ volts: "860", level: "4 · Praticien" });
     expect(calls[0].body.externalRef).toMatch(/^rdvia_sync_/);
     void card;
+  });
+
+  it("traduit les clés et renvoie locations: null sans réservation", async () => {
+    const { client, calls } = fakeApi(okHandler);
+    const ctx = { ...ctxWith(client), fieldKeyMap: { volts: "field_111", level: "field_222" } };
+    const card = await createCardForMember(ctx, "m1");
+    expect(calls[0].body.fields).toMatchObject({ field_111: "760", field_222: "3 · Explorateur", memberName: "Manon Blanc" });
+    expect(calls[0].body.fields).not.toHaveProperty("volts");
+    calls.length = 0;
+    repo.members.get("m1")!.voltsTotal = 790;
+    await enqueueSync(ctx, card.id, "volts_silent");
+    advance(2 * 60_000);
+    await processDueJobs(ctx);
+    expect(calls[0].body.fields.field_111).toBe("790");
+    expect(calls[0].body.locations).toBeNull();
+    expect(calls[0].body).not.toHaveProperty("message");
+  });
+
+  it("respecte Retry-After sur un 429 sans consommer de tentative", async () => {
+    let limited = true;
+    const { client } = fakeApi((c) =>
+      limited && c.path === "/instances/fields" ? { status: 429, body: { error: "slow down", code: "rate_limited" } } : okHandler(c),
+    );
+    const ctx = ctxWith(client);
+    const card = await createCardForMember(ctx, "m1");
+    repo.members.get("m1")!.voltsTotal = 780;
+    const job = await enqueueSync(ctx, card.id, "volts_silent");
+    advance(2 * 60_000);
+    expect(Object.values(await processDueJobs(ctx))).toEqual(["retry"]);
+    expect(repo.jobs.get(job.id)).toMatchObject({ status: "queued", attempts: 0 });
+    limited = false;
+    advance(70_000);
+    expect(Object.values(await processDueJobs(ctx))).toEqual(["pushed"]);
   });
 
   it("ne pousse rien quand rien n'a changé", async () => {
@@ -162,7 +199,7 @@ describe("synchronisation", () => {
   it("réessaie les 5xx avec backoff puis échoue après 5 tentatives", async () => {
     let fail = false;
     const { client } = fakeApi((c) =>
-      fail && c.path === "/instances/fields" ? { status: 500, body: { code: "internal", retryable: true } } : okHandler(c),
+      fail && c.path === "/instances/fields" ? { status: 500, body: { error: "boom", code: "internal_error", retryable: true } } : okHandler(c),
     );
     const ctx = ctxWith(client);
     const card = await createCardForMember(ctx, "m1");
@@ -202,6 +239,8 @@ describe("webhooks et révocation", () => {
     expect(calls.map((c) => c.path)).toEqual(["/passes/pass_1/issue", "/instances/revoke", "/passes/pass_1/issue"]);
     expect(calls[1].body.instanceId).toBe("inst_1");
     expect(calls[2].body.customerId).toBe(`member_m1_${fresh.code}`);
+    expect(calls[2].body.email).toBeUndefined(); // l'e-mail ramènerait l'instance révoquée
+    expect(calls[2].body.barcodeValue).toBe(`https://rendezvousia.fr/carte/${fresh.code}`);
     expect(repo.auditLog[0]).toMatchObject({ actorId: "admin", action: "member_card.revoke_regenerate" });
     expect(await repo.codeExists(old.code)).toBe(true); // jamais réattribué
   });

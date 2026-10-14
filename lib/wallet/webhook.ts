@@ -6,7 +6,7 @@ export type WebhookVerification =
   | { ok: true }
   | { ok: false; reason: "missing_headers" | "bad_signature" | "stale_timestamp" };
 
-/** Accepte un horodatage en secondes ou en millisecondes (À VÉRIFIER dans la doc). */
+/** La doc donne des secondes Unix ; les millisecondes sont tolérées par prudence. */
 function timestampToMs(ts: string): number {
   const n = Number(ts);
   if (!Number.isFinite(n)) return NaN;
@@ -49,16 +49,19 @@ export interface ParsedWebhookEvent {
   platform: "apple" | "google" | null;
 }
 
-/** Lecture défensive du corps (forme exacte À VÉRIFIER dans la doc). */
+/**
+ * Corps documenté : { id, type, created, passId, data: { instanceId, platform, email, … } }.
+ * `data` contient des données personnelles : on n'en garde que le nécessaire.
+ */
 export function parseWebhookEvent(rawBody: string, eventHeader: string | null): ParsedWebhookEvent {
   const json = JSON.parse(rawBody);
-  const data = json.data ?? json.payload ?? json;
-  const platformRaw = String(data.platform ?? data.walletPlatform ?? "").toLowerCase();
+  const data = json.data ?? {};
+  const platformRaw = String(data.platform ?? "").toLowerCase();
   return {
     id: json.id ?? null,
     type: eventHeader ?? json.type ?? json.event ?? "unknown",
-    instanceId: data.instanceId ?? data.instance?.id ?? null,
-    passId: data.passId ?? data.pass?.id ?? null,
+    instanceId: data.instanceId ?? null,
+    passId: json.passId ?? data.passId ?? null,
     platform: platformRaw.includes("apple") ? "apple" : platformRaw.includes("google") ? "google" : null,
   };
 }

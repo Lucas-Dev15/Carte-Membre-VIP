@@ -69,3 +69,48 @@ export function fieldsHash(fields: PassFields, locations: PassLocation[]): strin
   const ordered = HOLDER_FIELD_KEYS.map((k) => [k, fields[k]]);
   return createHash("sha256").update(JSON.stringify({ f: ordered, l: locations })).digest("hex");
 }
+
+/**
+ * Nos clés logiques → clés RÉELLES du pass The Pass Studio.
+ * Sur un pass « custom », l'éditeur génère des clés stables du type
+ * `field_1787677019449` ; une clé inconnue fait échouer tout l'appel
+ * (400 unknown_field_key). `npm run wallet:setup` propose la correspondance
+ * à mettre dans PASS_STUDIO_FIELD_KEYS (JSON). Clé absente = même nom.
+ */
+export type FieldKeyMap = Partial<Record<HolderFieldKey | (typeof TEMPLATE_FIELD_KEYS)[number], string>>;
+
+export function parseFieldKeyMap(raw: string | undefined): FieldKeyMap {
+  if (!raw) return {};
+  const parsed = JSON.parse(raw) as Record<string, unknown>;
+  const known = new Set<string>([...HOLDER_FIELD_KEYS, ...TEMPLATE_FIELD_KEYS]);
+  const out: FieldKeyMap = {};
+  for (const [k, v] of Object.entries(parsed)) {
+    if (!known.has(k)) throw new Error(`PASS_STUDIO_FIELD_KEYS : clé inconnue « ${k} »`);
+    if (typeof v !== "string" || !v) throw new Error(`PASS_STUDIO_FIELD_KEYS : valeur invalide pour « ${k} »`);
+    (out as Record<string, string>)[k] = v;
+  }
+  return out;
+}
+
+export function toPassStudioFields(fields: Partial<PassFields>, map: FieldKeyMap): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(fields)) {
+    if (v !== undefined) out[map[k as HolderFieldKey] ?? k] = v;
+  }
+  return out;
+}
+
+/** Libellés de la maquette (§3.3), pour retrouver les clés par libellé dans l'éditeur. */
+export const FIELD_LABELS: Record<HolderFieldKey | "howTo", string[]> = {
+  level: ["NIVEAU"],
+  volts: ["MES VOLTS"],
+  progress: ["PROGRESSION"],
+  memberName: ["MEMBRE"],
+  city: ["VILLE"],
+  nextTitle: ["PROCHAINE CONFÉRENCE"],
+  nextWhen: ["LE"],
+  nextFull: ["PROCHAINE CONFÉRENCE (VERSO)", "PROCHAINE CONFÉRENCE"],
+  memberSince: ["MEMBRE DEPUIS"],
+  memberCode: ["CODE MEMBRE"],
+  howTo: ["GAGNER DES VOLTS"],
+};

@@ -5,6 +5,7 @@
  */
 import { cardUrl } from "../wallet/code";
 import { isPassStudioConfigured, siteUrl } from "../wallet/config";
+import { parseFieldKeyMap } from "../wallet/fields";
 import { MemoryWalletRepository } from "../wallet/memory-repository";
 import { getPassStudioClient } from "../wallet/passstudio";
 import type { WalletRepository } from "../wallet/repository";
@@ -60,5 +61,6 @@ export async function getWalletContext(): Promise<WalletContext> {
     client: configured ? await getPassStudioClient() : null,
     passId: process.env.PASS_STUDIO_PASS_ID ?? "",
     siteUrl: siteUrl(),
+    fieldKeyMap: parseFieldKeyMap(process.env.PASS_STUDIO_FIELD_KEYS),
   };
 }

@@ -3,7 +3,14 @@ import { describe, expect, it } from "vitest";
 import { parseWebhookEvent, verifyWebhookSignature } from "../lib/wallet/webhook";
 
 const secret = "whsec_test";
-const body = JSON.stringify({ id: "evt_1", type: "pass.issued", data: { instanceId: "inst_1", platform: "apple" } });
+// Forme documentée : passId au niveau racine, identité dans data.
+const body = JSON.stringify({
+  id: "evt_1789344000123_a1b2c3",
+  type: "pass.issued",
+  created: 1789344000,
+  passId: "pass_1",
+  data: { instanceId: "inst_1", platform: "apple", email: "x@exemple.fr", barcodeContent: "…" },
+});
 const sign = (ts: string, raw: string) => "sha256=" + createHmac("sha256", secret).update(`${ts}.${raw}`).digest("hex");
 
 describe("signature webhook", () => {
@@ -26,6 +33,6 @@ describe("signature webhook", () => {
     expect(verifyWebhookSignature({ secret, rawBody: body, signatureHeader: null, timestampHeader: ts, now }).ok).toBe(false);
   });
   it("lit l'événement", () => {
-    expect(parseWebhookEvent(body, "pass.issued")).toMatchObject({ id: "evt_1", type: "pass.issued", instanceId: "inst_1", platform: "apple" });
+    expect(parseWebhookEvent(body, "pass.issued")).toEqual({ id: "evt_1789344000123_a1b2c3", type: "pass.issued", instanceId: "inst_1", passId: "pass_1", platform: "apple" });
   });
 });

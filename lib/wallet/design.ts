@@ -12,7 +12,8 @@ export function passDesign(siteUrl: string): PassDesign {
     logoUrl: asset("rdvia-logo-480x150.png"),
     iconUrl: asset("rdvia-icon-87x87.png"),
     stripImageUrl: asset("rdvia-strip-1125x432.png"),
-    barcodeType: "QR", // À VÉRIFIER : valeur exacte attendue (QR, qr, PKBarcodeFormatQR…)
+    // barcodeType : la doc n'en liste pas les valeurs. On le laisse à l'éditeur (QR code)
+    // et on lit la valeur retenue avec GET /passes/{passId} → design.barcodeType.
     showBarcodeText: true,
     backWebsiteUrl: `${siteUrl}/mon-espace`,
     holderPhotoStrip: null,
@@ -20,4 +21,5 @@ export function passDesign(siteUrl: string): PassDesign {
   };
 }
 
+/** Libellé du pass dans l'éditeur. */
 export const PASS_NAME = "Carte membre Les RDV IA";

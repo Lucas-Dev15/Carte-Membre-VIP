@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { cardUrl, generateMemberCode } from "./code";
-import { buildLocations, buildPassFields, fieldsHash } from "./fields";
+import { buildLocations, buildPassFields, fieldsHash, toPassStudioFields, type FieldKeyMap } from "./fields";
 import { formatNotifWhen } from "./format";
 import { levelFor } from "./levels";
 import { PassStudioError, type PassStudioClient } from "./passstudio";
@@ -13,6 +13,8 @@ export interface WalletContext {
   client: PassStudioClient | null; // null : Pass Studio non configuré (démo)
   passId: string;
   siteUrl: string;
+  /** Nos clés → clés réelles du pass (PASS_STUDIO_FIELD_KEYS). */
+  fieldKeyMap?: FieldKeyMap;
   now?: () => Date;
 }
 
@@ -21,6 +23,8 @@ const now = (ctx: WalletContext) => (ctx.now ? ctx.now() : new Date());
 export const GROUPING_DELAY_MS = 2 * 60 * 1000;
 export const MAX_ATTEMPTS = 5;
 export const CREDITS_RETRY_DELAY_MS = 15 * 60 * 1000;
+/** 402 : on réessaie toutes les 15 min pendant 24 h avec le même externalRef. */
+export const MAX_CREDIT_ATTEMPTS = 96;
 
 /** Une seule notification par job : niveau > présence > réservation. */
 const MESSAGE_PRIORITY: Record<SyncReason, number> = {
@@ -93,13 +97,18 @@ function emptyPass(cardId: string, passId: string): WalletPass {
 
 /** Émet l'instance si elle n'existe pas encore (appel idempotent côté API). */
 /**
- * L'émission est idempotente par customerId : la 1re carte d'un membre utilise
- * `member_<id>` ; une carte régénérée ajoute son code, sinon l'API renverrait
- * l'instance révoquée.
+ * L'émission est dédoublonnée par identifiant, dans l'ordre
+ * holderId → email → phone → customerId (doc « Idempotency »).
+ * - 1re carte : `member_<id>` + e-mail, comme dans la spécification.
+ * - Carte régénérée : l'e-mail ramènerait l'ancienne instance (révoquée) ;
+ *   on émet donc sans e-mail, avec un customerId propre à la nouvelle carte.
+ *   Nos e-mails partent de toute façon de notre plateforme (sendEmail: false).
  */
-async function customerIdFor(ctx: WalletContext, card: MemberCard): Promise<string> {
+async function issueIdentity(ctx: WalletContext, card: MemberCard, email: string) {
   const count = await ctx.repo.countCardsForMember(card.memberId);
-  return count > 1 ? `member_${card.memberId}_${card.code}` : `member_${card.memberId}`;
+  return count > 1
+    ? { customerId: `member_${card.memberId}_${card.code}` }
+    : { customerId: `member_${card.memberId}`, email };
 }
 
 export async function ensureIssued(ctx: WalletContext, card: MemberCard): Promise<WalletPass> {
@@ -112,18 +121,21 @@ export async function ensureIssued(ctx: WalletContext, card: MemberCard): Promis
 
   const fields = buildPassFields(member, card.code);
   const locations = buildLocations(member);
-  const { body } = await ctx.client.issue(ctx.passId, {
-    customerId: await customerIdFor(ctx, card),
-    source: "rdvia",
-    email: member.email,
-    name: fields.memberName,
-    sendEmail: false,
-    includeArtifacts: true,
-    locale: "fr",
-    barcodeValue: card.qrUrl,
-    fields,
-    ...(locations.length ? { locations } : {}),
-  });
+  const { body } = await ctx.client.issue(
+    ctx.passId,
+    {
+      ...(await issueIdentity(ctx, card, member.email)),
+      source: "rdvia",
+      name: fields.memberName,
+      sendEmail: false,
+      includeArtifacts: true,
+      locale: "fr",
+      barcodeValue: card.qrUrl,
+      fields: toPassStudioFields(fields, ctx.fieldKeyMap ?? {}),
+      ...(locations.length ? { locations } : {}),
+    },
+    `rdvia_issue_${card.id}`,
+  );
 
   const pass: WalletPass = {
     ...(current ?? emptyPass(card.id, ctx.passId)),
@@ -132,7 +144,7 @@ export async function ensureIssued(ctx: WalletContext, card: MemberCard): Promis
     addToWalletUrl: body.addToWalletUrl ?? null,
     appleWalletUrl: body.artifacts?.appleWalletUrl ?? null,
     googleWalletUrl: body.artifacts?.googleWalletUrl ?? null,
-    // Si l'instance existait déjà, ses champs peuvent être anciens : on force un push.
+    // Sur un doublon, les champs envoyés ne sont pas appliqués (doc) : on force un push.
     lastFieldsHash: body.alreadyExisted ? null : fieldsHash(fields, locations),
     lastPushedAt: now(ctx),
     lastPushStatus: body.alreadyExisted ? "issued_existing" : "issued",
@@ -217,13 +229,14 @@ export async function runSyncJob(ctx: WalletContext, job: WalletSyncJob): Promis
 
     const res = await ctx.client.updateFields({
       instanceId: pass.psInstanceId,
-      fields,
+      fields: toPassStudioFields(fields, ctx.fieldKeyMap ?? {}),
       ...(job.message ? { message: job.message } : {}),
-      locations, // [] retire le lieu (À VÉRIFIER : [] ou null selon la doc)
+      // 1 à 10 lieux propres au porteur ; null = retour aux lieux du modèle (aucun).
+      locations: locations.length ? locations : null,
       externalRef: job.externalRef,
     });
 
-    if (res.status === 202) {
+    if (res.status === 202 || res.body?.pushSkipReason === "insufficient_credits") {
       // Crédits insuffisants : en attente, alerte, relance après rechargement.
       pass = { ...pass, lastPushStatus: "waiting_credits", lastError: "insufficient_credits" };
       await ctx.repo.saveWalletPass(pass);
@@ -261,12 +274,22 @@ async function handleJobError(ctx: WalletContext, job: WalletSyncJob, err: unkno
   const retryLater = (delayMs: number) =>
     ctx.repo.saveJob({ ...job, status: "queued", runAfter: new Date(now(ctx).getTime() + delayMs) });
 
-  // 402 sur un appel avec message : on réessaie plus tard avec le MÊME externalRef.
-  if (e?.status === 402 && job.attempts < MAX_ATTEMPTS) {
+  // 429 : on attend Retry-After (≤ 60 s) plus un peu d'aléa ; ne compte pas comme une tentative.
+  if (e?.status === 429) {
+    job.attempts -= 1;
+    await retryLater((e.retryAfterSec ?? 60) * 1000 + Math.floor(Math.random() * 5000));
+    return "retry";
+  }
+  // 402 sur un appel avec message : rien n'est appliqué et la ref n'est pas consommée,
+  // on réessaie plus tard avec le MÊME externalRef.
+  if (e?.status === 402 && job.attempts < MAX_CREDIT_ATTEMPTS) {
+    if (job.attempts === 1) {
+      await ctx.repo.alertSuperAdmin("Crédits The Pass Studio insuffisants", { jobId: job.id, requestId: e.requestId });
+    }
     await retryLater(CREDITS_RETRY_DELAY_MS);
     return "retry";
   }
-  const retryable = e ? e.retryable : true; // erreur réseau : on retente
+  const retryable = e ? e.retryable : true; // erreur réseau : on retente (appels idempotents)
   if (retryable && job.attempts < MAX_ATTEMPTS) {
     await retryLater(2 ** job.attempts * 30_000); // 1 min, 2 min, 4 min, 8 min
     return "retry";
@@ -309,6 +332,18 @@ export async function resumeJobsAfterCredits(ctx: WalletContext): Promise<number
     });
   }
   return jobs.length;
+}
+
+/**
+ * À appeler par le cron : si des jobs attendent des crédits et que le solde
+ * (GET /me → billing.credits) est de nouveau positif, on les relance.
+ */
+export async function resumeIfCreditsAvailable(ctx: WalletContext): Promise<number> {
+  if (!ctx.client) return 0;
+  if ((await ctx.repo.jobsWaitingCredits()).length === 0) return 0;
+  const { body } = await ctx.client.getMe();
+  if ((body.billing?.credits ?? 0) <= 0) return 0;
+  return resumeJobsAfterCredits(ctx);
 }
 
 // ---------------------------------------------------------------------------

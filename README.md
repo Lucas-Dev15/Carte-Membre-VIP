@@ -11,7 +11,7 @@ Carte membre virtuelle (site) + pass Apple Wallet / Google Wallet généré et m
 npm install
 cp .env.example .env.local   # renseigner les variables (voir ci-dessous)
 npm run dev                  # http://localhost:3000/mon-espace
-npm test                     # 20 tests (champs, formats, file de synchro, webhooks, révocation)
+npm test                     # 27 tests (champs, formats, client API, file de synchro, webhooks, révocation)
 ```
 
 Sans base de données, l'application tourne sur un dépôt en mémoire pré-rempli avec le membre de la
@@ -26,8 +26,9 @@ maquette (Manon Blanc, `RVIA-NCY-1259`). Sans clé The Pass Studio, la carte web
 | `PASS_STUDIO_PASS_ID` | identifiant du modèle, affiché par `npm run wallet:setup` |
 | `PASS_STUDIO_WEBHOOK_SECRET` | secret de signature des webhooks |
 | `PASS_STUDIO_BASE_URL` | `https://www.passstudio.online/api/v1` |
+| `PASS_STUDIO_FIELD_KEYS` | correspondance JSON nos clés → clés réelles du pass (proposée par `wallet:setup`) |
 | `PUBLIC_SITE_URL` | `https://rendezvousia.fr` (URL des QR et des images du pass) |
-| `WALLET_PUSH_INTERVAL_MS` | espacement entre deux pushs (rate limits) |
+| `WALLET_PUSH_INTERVAL_MS` | espacement entre deux pushs : 250 ms = 240 appels/min, sous la limite de 600/min par clé |
 | `CRON_SECRET` | protège `POST /api/cron/wallet-sync` |
 
 Aucune n'a le préfixe `NEXT_PUBLIC_` ; `lib/wallet/config.ts` refuse d'être chargé côté navigateur.
@@ -35,16 +36,19 @@ Le build a été vérifié : ni la clé ni l'URL de l'API ne figurent dans `.nex
 
 ## Création du modèle de pass
 
-1. Héberger `public/wallet/*.png` en https public (servis tels quels par le site : `https://rendezvousia.fr/wallet/…`).
-2. De préférence, créer le modèle dans l'**éditeur The Pass Studio** (type `loyalty`, distribution `unique`),
-   appliquer le design de `lib/wallet/design.ts` et placer les champs du §3.3 :
-   `level` (en-tête), `volts` (principal), `progress`, `memberName` / `city` (secondaires),
-   `nextTitle` / `nextWhen` (auxiliaires), `memberSince`, `memberCode`, `nextFull` (verso),
-   `howTo` (verso, **champ du modèle**).
-3. `PASS_STUDIO_PASS_ID=… npm run wallet:setup` vérifie que toutes les clés sont présentes et que
-   `publishBlockers` est vide. Sans `PASS_STUDIO_PASS_ID`, le script crée le modèle via `POST /passes`.
-4. `npm run wallet:setup -- --publish` publie le modèle (`status: active`).
-   En développement, garder un pass de test séparé en `draft`.
+1. Héberger `public/wallet/*.png` en https public (servis par le site : `https://rendezvousia.fr/wallet/…`).
+   The Pass Studio télécharge les images, les vérifie et les redimensionne (icône 87×87, logo ≤ 480×150, bandeau 1125×432).
+2. Créer le modèle **dans l'éditeur The Pass Studio**, en type **Custom** (voir écart n° 1), distribution `unique`,
+   avec le design de `lib/wallet/design.ts`. Placer les champs du §3.3 avec exactement ces libellés :
+   NIVEAU, MES VOLTS, PROGRESSION, MEMBRE, VILLE, PROCHAINE CONFÉRENCE, LE, MEMBRE DEPUIS, CODE MEMBRE,
+   PROCHAINE CONFÉRENCE (VERSO), GAGNER DES VOLTS.
+   (`npm run wallet:setup` sans `PASS_STUDIO_PASS_ID` crée le brouillon par l'API, mais les champs se placent dans l'éditeur.)
+3. `PASS_STUDIO_PASS_ID=… npm run wallet:setup` : désactive l'e-mail d'invitation de The Pass Studio, liste les clés
+   du pass, les retrouve par leur libellé et affiche la valeur de `PASS_STUDIO_FIELD_KEYS` à mettre dans l'environnement.
+4. `npm run wallet:setup -- --set-howto` écrit le texte « Gagner des volts » (champ commun à tous, 1 crédit).
+5. `npm run wallet:setup -- --publish` publie le modèle (**10 crédits**, une seule fois).
+6. Développement : un second pass de test, avec sa propre clé API restreinte à ce pass
+   (Settings → API Keys → « Restricted to passes »).
 
 ## Architecture
 
@@ -63,7 +67,7 @@ Le build a été vérifié : ni la clé ni l'URL de l'API ne figurent dans `.nex
 | `app/carte/[code]` | page du QR (selon le rôle, neutre sinon, limitée en débit, jamais de pointage) |
 | `app/api/wallet/add` | redirection vers Apple / Google (émission au premier clic si besoin) |
 | `app/api/webhooks/passstudio` | `pass.issued` / `pass.updated` / `pass.removed` |
-| `app/api/cron/wallet-sync` | traite la file — à appeler chaque minute |
+| `app/api/cron/wallet-sync` | relance les jobs en attente de crédits si le solde le permet (`GET /me`), puis traite la file — à appeler chaque minute |
 
 ### Brancher les événements métier
 
@@ -83,26 +87,39 @@ Après écriture en base, appeler :
 
 ## Écarts et points à valider
 
-La documentation The Pass Studio (`thepassstudio.com/docs/integrations`) **n'a pas pu être consultée**
-depuis l'environnement de développement (domaine bloqué par la politique réseau). L'intégration suit
-donc la spécification interne ; les points suivants sont marqués `À VÉRIFIER` dans le code et doivent
-être confrontés à la doc avant la mise en production :
+Vérifié dans la documentation The Pass Studio (integrations, errors, rate-limits, billing, events) le 14/10/2026.
 
-1. **Authentification** : `Authorization: Bearer <clé>` supposé.
-2. **Publication du modèle** : `PATCH /passes/{id}` avec `status: "active"` supposé (il peut exister un endpoint dédié).
-3. **`barcodeType`** : `"QR"` provisoire.
-4. **Texte sous le QR** : on envoie `barcodeValue` = URL de la carte et `showBarcodeText: true`. Si The Pass Studio
-   affiche forcément la valeur encodée (l'URL) et n'a pas de texte alternatif, il faudra choisir entre l'URL
-   affichée sous le QR, ou masquer le texte (le code reste visible au verso via `memberCode`).
-5. **Retrait du lieu** : on envoie `locations: []` ; la doc peut exiger `null`. `locations` est aussi envoyé à l'émission — à confirmer.
-6. **Forme des réponses** (`instanceId`, `artifacts.*`, `pushSkipReason`, erreurs `{ code, retryable }`) et des
-   webhooks (`data.instanceId`, `data.platform`, horodatage en secondes ou ms) : lecture défensive en place.
-7. **Rate limits** : espacement fixe `WALLET_PUSH_INTERVAL_MS` (250 ms) faute de connaître les limites exactes ; à aligner sur la page rate-limits.
-8. **Régénération** : l'émission est idempotente par `customerId`. Une carte régénérée utilise
-   `member_<id>_<nouveau code>` (sinon l'API renverrait l'instance révoquée). La 1re carte garde `member_<id>`.
-9. **Libellé de `progress`** : la maquette met « Encore 40 pour Praticien » dans le libellé de « MES VOLTS ». Un libellé
-   Apple est en principe fixe ; si l'éditeur ne permet pas de le rendre dynamique, `progress` sera un champ séparé
-   (ligne sous le principal ou champ secondaire).
+**Confirmé par la doc :** `Authorization: Bearer`, chemins des appels, publication par `PATCH /passes/{id}`
+(`status: "active"`, 10 crédits), réponses `{ pass: … }`, erreurs `{ error, code, requestId, retryable }`,
+`artifacts.appleWalletUrl / googleWalletUrl`, 202 = push sauté faute de crédits (ref consommée → nouvelle ref),
+402 = rien appliqué (même ref), signature des webhooks (horodatage en secondes), 5 tentatives puis désactivation.
+
+**Corrigé suite à la lecture de la doc :**
+- `locations` : 1 à 10 lieux, ou `null` pour les retirer (`[]` n'est pas accepté).
+- 500 : réessayé seulement s'il porte `retryable: true` ; 429 : on attend `Retry-After` (limite : 600 requêtes/min par clé).
+- `passId` des webhooks lu à la racine de l'événement.
+- Les crédits rechargés sont détectés par `GET /me` (`billing.credits`) et les jobs en attente relancés.
+- `sendInviteEmail: false` sur le pass : The Pass Studio n'envoie jamais d'e-mail, c'est notre plateforme qui le fait.
+- Nos propres `X-Request-Id` (`rdvia_sync_…`, `rdvia_issue_…`) sont envoyés pour relier nos journaux aux leurs.
+
+**À valider avec toi :**
+
+1. **Type de pass : `custom` au lieu de `loyalty`.** Les types structurés (loyalty, coupon, event, generic) utilisent
+   des clés de champ documentées (`memberName`, `points`, `tier`…). Seul le type **Custom** permet nos 11 champs libres.
+   Ses clés sont générées par l'éditeur (`field_1787677019449`), d'où `PASS_STUDIO_FIELD_KEYS`.
+   Une clé inconnue fait échouer tout l'appel (400 `unknown_field_key`) : rien ne part à moitié rempli.
+   À vérifier dans l'éditeur : le placement en-tête / principal sur le bandeau / secondaires / auxiliaires / verso.
+2. **Texte sous le QR.** La doc ne prévoit pas de texte alternatif sous le code : avec `showBarcodeText: true`,
+   c'est la valeur encodée (l'URL `https://rendezvousia.fr/carte/RVIA-…`) qui s'affichera. Le QR garde l'URL, comme demandé.
+   Options : laisser l'URL, ou `showBarcodeText: false` et compter sur le champ CODE MEMBRE.
+3. **Carte régénérée.** L'émission est dédoublonnée par e-mail **avant** le `customerId`. Avec le même e-mail,
+   l'API pourrait renvoyer l'ancienne instance révoquée. Une carte régénérée est donc émise **sans e-mail**, avec
+   `customerId = member_<id>_<nouveau code>` (la 1re carte garde `member_<id>` + e-mail, conformément à la spec).
+4. **Pass de test en brouillon : impossible.** Un brouillon ne peut pas émettre (409 `pass_not_active`). Le pass de
+   test doit être publié (10 crédits) ; on l'isole avec une clé API restreinte à ce pass.
+5. **`barcodeType`** : la doc ne liste pas les valeurs ; on laisse l'éditeur choisir QR code.
+6. **Libellé de `progress`.** La maquette met « Encore 40 pour Praticien » dans le libellé de MES VOLTS. Un libellé
+   est fixe : `progress` est un champ séparé (PROGRESSION), sous le chiffre ou en secondaire.
 
 Écarts côté produit :
 
@@ -115,3 +132,4 @@ donc la spécification interne ; les points suivants sont marqués `À VÉRIFIER
 - **Polices** : Inter / Inter Tight chargées depuis Google Fonts.
 - Heures pile affichées « 9 h » (et non « 9 h 00 »).
 - Les écarts inévitables du §3.4 (volts en blanc, pas de barre de progression ni d'animation dans le pass, mise en page Google) s'appliquent.
+- Coûts : 1 crédit par émission, 1 crédit par push par porteur (un pointage de 80 présents ≈ 80 crédits), révocations et webhooks gratuits.
