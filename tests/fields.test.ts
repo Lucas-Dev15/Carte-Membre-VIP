@@ -85,3 +85,13 @@ describe("code membre", () => {
     }
   });
 });
+
+describe("paliers", () => {
+  it("couvrent chaque niveau", () => {
+    expect([0, 199, 200, 449, 450, 799, 800, 1299, 1300].map(levelLabel)).toEqual([
+      "1 · Curieux", "1 · Curieux", "2 · Initié", "2 · Initié", "3 · Explorateur",
+      "3 · Explorateur", "4 · Praticien", "4 · Praticien", "5 · Expert",
+    ]);
+    expect(progressLabel(1250)).toBe("Encore 50 volts pour Expert");
+  });
+});

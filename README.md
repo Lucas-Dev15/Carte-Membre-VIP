@@ -11,7 +11,7 @@ Carte membre virtuelle (site) + pass Apple Wallet / Google Wallet généré et m
 npm install
 cp .env.example .env.local   # renseigner les variables (voir ci-dessous)
 npm run dev                  # http://localhost:3000/mon-espace
-npm test                     # 27 tests (champs, formats, client API, file de synchro, webhooks, révocation)
+npm test                     # 28 tests (champs, formats, client API, file de synchro, webhooks, révocation)
 ```
 
 Sans base de données, l'application tourne sur un dépôt en mémoire pré-rempli avec le membre de la
@@ -125,10 +125,11 @@ Vérifié dans la documentation The Pass Studio (integrations, errors, rate-limi
 
 Écarts côté produit :
 
-- **Paliers de niveau** : seuls « 3 · Explorateur » et « 4 · Praticien » (800 volts) sont connus. Les noms et seuils
-  des niveaux 1, 2, 5 et le seuil du niveau 3 dans `lib/wallet/levels.ts` sont **provisoires** — à fournir.
-- **Badges wallet officiels** : non inclus (à télécharger chez Apple et Google, en français). Boutons provisoires
-  en attendant ; déposer les SVG dans `public/wallet/badges/` et passer `OFFICIAL_BADGES` à `true`.
+- **Paliers de niveau** (proposés, `lib/wallet/levels.ts`) : 1 Curieux (0) · 2 Initié (200) · 3 Explorateur (450) ·
+  4 Praticien (800) · 5 Expert (1300). Une soirée complète rapporte environ 135 volts.
+- **Badges wallet officiels** : le badge Google Wallet français officiel est inclus. Le badge Apple se télécharge
+  depuis un compte Apple Developer (developer.apple.com/wallet/add-to-apple-wallet-guidelines) : le déposer en
+  `public/wallet/badges/add-to-apple-wallet-fr.svg` et passer `APPLE_BADGE_AVAILABLE` à `true`. Bouton provisoire d'ici là.
 - **Authentification, base de données et envoi d'e-mails** : le dépôt était vide. Points de branchement :
   `lib/app/auth.ts` (session et rôles), `lib/wallet/repository.ts` + `db/schema.sql`, `TODO` e-mail dans les routes admin.
 - **Polices** : Inter / Inter Tight chargées depuis Google Fonts.

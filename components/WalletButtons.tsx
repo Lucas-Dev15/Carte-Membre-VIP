@@ -17,20 +17,21 @@ export interface WalletButtonsProps {
 }
 
 /**
- * ⚠️ Les règles d'Apple et de Google imposent les badges OFFICIELS
- * « Ajouter à Apple Wallet » / « Ajouter à Google Wallet » (FR).
- * Déposez-les dans public/wallet/badges/ (add-to-apple-wallet-fr.svg,
- * add-to-google-wallet-fr.svg) puis passez OFFICIAL_BADGES à true : ils
- * remplacent les boutons provisoires ci-dessous (hauteur 48 px).
+ * Apple et Google imposent leurs badges OFFICIELS pour les boutons « Ajouter au wallet ».
+ * - Google : badge français officiel (Google Wallet brand guidelines), dans public/wallet/badges/.
+ * - Apple : le badge se télécharge depuis un compte Apple Developer
+ *   (developer.apple.com/wallet/add-to-apple-wallet-guidelines). Déposez-le en
+ *   public/wallet/badges/add-to-apple-wallet-fr.svg et passez APPLE_BADGE_AVAILABLE à true ;
+ *   d'ici là, un bouton provisoire s'affiche.
  */
-const OFFICIAL_BADGES = false;
 const APPLE_BADGE = "/wallet/badges/add-to-apple-wallet-fr.svg";
 const GOOGLE_BADGE = "/wallet/badges/add-to-google-wallet-fr.svg";
+const APPLE_BADGE_AVAILABLE = false;
 
-function Badge({ href, src, fallback }: { href: string; src: string; fallback: string }) {
+function Badge({ href, src, fallback, available }: { href: string; src: string; fallback: string; available: boolean }) {
   return (
     <a href={href} className={styles.badge} aria-label={fallback}>
-      {OFFICIAL_BADGES ? (
+      {available ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={src} alt={fallback} height={48} />
       ) : (
@@ -52,8 +53,8 @@ export function WalletButtons({ installedPlatform, pageQrSvg }: WalletButtonsPro
     );
   }
 
-  const apple = <Badge href="/api/wallet/add?platform=apple" src={APPLE_BADGE} fallback="Ajouter à Apple Wallet" />;
-  const google = <Badge href="/api/wallet/add?platform=google" src={GOOGLE_BADGE} fallback="Ajouter à Google Wallet" />;
+  const apple = <Badge href="/api/wallet/add?platform=apple" src={APPLE_BADGE} fallback="Ajouter à Apple Wallet" available={APPLE_BADGE_AVAILABLE} />;
+  const google = <Badge href="/api/wallet/add?platform=google" src={GOOGLE_BADGE} fallback="Ajouter à Google Wallet" available />;
 
   if (device === "ios") return <div className={styles.row}>{apple}</div>;
   if (device === "android") return <div className={styles.row}>{google}</div>;

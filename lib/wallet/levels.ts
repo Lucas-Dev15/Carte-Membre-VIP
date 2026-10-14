@@ -1,9 +1,13 @@
 /**
  * Paliers de niveau, calculés sur les volts CUMULÉS (ils ne baissent jamais).
  *
- * ⚠️ À CONFIRMER : la spécification ne donne que « 3 · Explorateur » et
- * « 4 · Praticien » à 800 volts (760 volts → « encore 40 pour Praticien »).
- * Les autres noms et seuils ci-dessous sont des valeurs provisoires.
+ * Repères (barème « Gagner des volts ») : une soirée avec présence, questionnaire
+ * et replay rapporte environ 135 volts.
+ *   1 Curieux       0     inscription
+ *   2 Initié        200   ≈ 2 soirées
+ *   3 Explorateur   450   ≈ 4 soirées
+ *   4 Praticien     800   ≈ 6 soirées (seuil de la maquette : 760 → « encore 40 »)
+ *   5 Expert        1300  ≈ 10 soirées
  */
 export interface Level {
   rank: number;
@@ -12,11 +16,11 @@ export interface Level {
 }
 
 export const LEVELS: readonly Level[] = [
-  { rank: 1, name: "Curieux", minVolts: 0 }, // provisoire
-  { rank: 2, name: "Initié", minVolts: 300 }, // provisoire
-  { rank: 3, name: "Explorateur", minVolts: 500 }, // seuil provisoire
+  { rank: 1, name: "Curieux", minVolts: 0 },
+  { rank: 2, name: "Initié", minVolts: 200 },
+  { rank: 3, name: "Explorateur", minVolts: 450 },
   { rank: 4, name: "Praticien", minVolts: 800 },
-  { rank: 5, name: "Expert", minVolts: 1500 }, // provisoire
+  { rank: 5, name: "Expert", minVolts: 1300 },
 ];
 
 export function levelFor(volts: number): Level {
