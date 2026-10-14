@@ -100,6 +100,25 @@ export function toPassStudioFields(fields: Partial<PassFields>, map: FieldKeyMap
   return out;
 }
 
+/**
+ * Disposition du pass Custom (validée) : emplacement Apple de chaque champ.
+ * Sur un pass Custom, `design.fields` = lignes { key, label, value, position } (format lu dans le
+ * générateur de The Pass Studio, non documenté) ; `wallet:setup -- --fields` les écrit.
+ */
+export const PASS_LAYOUT: { key: HolderFieldKey | "howTo"; label: string; position: "header" | "primary" | "secondary" | "auxiliary" | "back" }[] = [
+  { key: "level", label: "NIVEAU", position: "header" },
+  { key: "volts", label: "MES VOLTS", position: "primary" },
+  { key: "memberName", label: "MEMBRE", position: "secondary" },
+  { key: "city", label: "VILLE", position: "secondary" },
+  { key: "nextTitle", label: "PROCHAINE CONFÉRENCE", position: "auxiliary" },
+  { key: "nextWhen", label: "LE", position: "auxiliary" },
+  { key: "progress", label: "PROGRESSION", position: "back" },
+  { key: "memberSince", label: "MEMBRE DEPUIS", position: "back" },
+  { key: "memberCode", label: "CODE MEMBRE", position: "back" },
+  { key: "nextFull", label: "PROCHAINE CONFÉRENCE (VERSO)", position: "back" },
+  { key: "howTo", label: "GAGNER DES VOLTS", position: "back" },
+];
+
 /** Libellés de la maquette (§3.3), pour retrouver les clés par libellé dans l'éditeur. */
 export const FIELD_LABELS: Record<HolderFieldKey | "howTo", string[]> = {
   level: ["NIVEAU"],

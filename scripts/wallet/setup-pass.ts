@@ -4,12 +4,24 @@
  *   npm run wallet:setup                       crée le modèle (brouillon) si PASS_STUDIO_PASS_ID est vide, sinon le vérifie
  *   npm run wallet:setup -- --set-howto        écrit le texte « Gagner des volts » (champ du modèle, 1 push = 1 crédit)
  *   npm run wallet:setup -- --publish          publie le modèle (10 crédits, une seule fois)
+ *   npm run wallet:setup -- --fields           écrit / replace les 11 champs (PASS_LAYOUT) avec des valeurs de test,
+ *                                              en gardant les clés existantes (gratuit, sans push)
+ *   npm run wallet:setup -- --design           renvoie couleurs et images de lib/wallet/design.ts (gratuit, sans push)
+ *   … --push                                   avec --fields / --design : pousse aussi aux cartes émises (1 crédit par push)
  *
  * Recommandé : dessiner le modèle dans l'éditeur The Pass Studio (placement des champs §3.3),
  * puis lancer ce script avec PASS_STUDIO_PASS_ID : il propose PASS_STUDIO_FIELD_KEYS
  * (clés générées par l'éditeur, retrouvées par leur libellé) et vérifie qu'il ne manque rien.
  */
-import { FIELD_LABELS, HOLDER_FIELD_KEYS, HOW_TO_TEXT, parseFieldKeyMap } from "../../lib/wallet/fields";
+import {
+  FIELD_LABELS,
+  HOLDER_FIELD_KEYS,
+  HOW_TO_TEXT,
+  PASS_LAYOUT,
+  buildPassFields,
+  parseFieldKeyMap,
+} from "../../lib/wallet/fields";
+import { SAMPLE_CODE, sampleMember } from "./sample";
 import { PASS_NAME, passDesign } from "../../lib/wallet/design";
 import { PassStudioClient, PassStudioError } from "../../lib/wallet/passstudio";
 
@@ -44,12 +56,43 @@ async function main() {
       distributionMode: "unique",
       status: "draft",
       sendInviteEmail: false, // nos e-mails partent de notre plateforme
-      clientRequestId: `rdvia-carte-membre-${passType}-v1`, // relancer le script ne crée pas de doublon
+      // Relancer le script ne crée pas de doublon : même clé = même pass. PASS_STUDIO_CREATE_ID force un nouveau pass.
+      clientRequestId: process.env.PASS_STUDIO_CREATE_ID || `rdvia-carte-membre-${passType}-v1`,
       design: passDesign(siteUrl, assetBaseUrl),
     });
     passId = body.pass.passId;
     console.log(`Modèle ${body.alreadyExisted ? "existant" : "créé"} : ${passId}`);
     console.log("→ Placez maintenant les champs du §3.3 dans l'éditeur, puis relancez avec PASS_STUDIO_PASS_ID.");
+  }
+
+  const push = args.includes("--push");
+
+  if (args.includes("--design")) {
+    const res = await client.updatePass(passId, { design: passDesign(siteUrl, assetBaseUrl), push });
+    console.log(
+      res.body.pushed
+        ? `Design et images renvoyés, poussés à ${String(res.body.holderCount ?? "?")} carte(s).`
+        : "Design et images renvoyés (sans push : les cartes émises le recevront au prochain push).",
+    );
+  }
+
+  if (args.includes("--fields")) {
+    // Pass Custom : design.fields = [{ key, label, value, position }]. On garde la clé d'une ligne existante
+    // (même libellé, ou clé déjà dans PASS_STUDIO_FIELD_KEYS) pour que PASS_STUDIO_FIELD_KEYS reste valable.
+    const before = await client.getPass(passId);
+    const rows = Array.isArray(before.body.pass.design?.fields)
+      ? (before.body.pass.design!.fields as { key?: string; label?: string }[])
+      : [];
+    const known = parseFieldKeyMap(process.env.PASS_STUDIO_FIELD_KEYS);
+    const sample: Record<string, string> = { ...buildPassFields(sampleMember(760), SAMPLE_CODE), howTo: HOW_TO_TEXT };
+    const stamp = Date.now();
+    const fields = PASS_LAYOUT.map((f, i) => {
+      const existing = rows.find((r) => r.key && (r.key === known[f.key] || norm(r.label ?? "") === norm(f.label)));
+      return { key: existing?.key ?? `field_${stamp + i}`, label: f.label, value: sample[f.key], position: f.position };
+    });
+    const res = await client.updatePass(passId, { design: { fields }, push });
+    console.log(`11 champs écrits${res.body.pushed ? " et poussés" : " (sans push)"} :`);
+    for (const f of fields) console.log(`  ${f.position.padEnd(10)} ${f.key}  ${f.label}`);
   }
 
   const { body } = await client.getPass(passId);

@@ -137,6 +137,21 @@ export interface UpdateFieldsResult {
   [k: string]: unknown;
 }
 
+export interface InstanceInfo {
+  instanceId: string;
+  status: string;
+  /** created | downloaded | installed… : « installed » = présente dans un wallet */
+  stage: string;
+  wallets: string[];
+  barcodeContent: string;
+  shareToken: string;
+  addToWalletUrl: string;
+  customerId: string | null;
+  createdAt: string;
+  installedAt: string | null;
+  [k: string]: unknown;
+}
+
 export interface MeResult {
   id: string;
   billing?: { credits: number; plan: string };
@@ -229,6 +244,15 @@ export class PassStudioClient {
 
   updateFields(input: UpdateFieldsInput) {
     return this.request<UpdateFieldsResult>("PATCH", "/instances/fields", input, input.externalRef);
+  }
+
+  /** Cartes émises sur un pass (100 par page, suivre nextCursor). */
+  listInstances(passId: string, cursor?: string) {
+    const q = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
+    return this.request<{ instances: InstanceInfo[]; nextCursor: string | null }>(
+      "GET",
+      `/passes/${encodeURIComponent(passId)}/instances${q}`,
+    );
   }
 
   revoke(instanceId: string, reason?: string) {

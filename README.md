@@ -47,6 +47,8 @@ Le build a été vérifié : ni la clé ni l'URL de l'API ne figurent dans `.nex
    - auxiliaires : PROCHAINE CONFÉRENCE (gauche), LE (droite) ;
    - verso : PROGRESSION, MEMBRE DEPUIS, CODE MEMBRE, PROCHAINE CONFÉRENCE (VERSO), GAGNER DES VOLTS.
    (`npm run wallet:setup` sans `PASS_STUDIO_PASS_ID` crée le brouillon par l'API, mais les champs se placent dans l'éditeur.)
+   `npm run wallet:setup -- --fields` écrit ces 11 champs par l'API (sans passer par l'éditeur), avec des valeurs de test,
+   en gardant les clés existantes ; `-- --design` renvoie couleurs et images. Gratuits sans `--push`.
 3. `PASS_STUDIO_PASS_ID=… npm run wallet:setup` : masque le texte sous le QR, désactive l'e-mail d'invitation de The Pass Studio, liste les clés
    du pass, les retrouve par leur libellé et affiche la valeur de `PASS_STUDIO_FIELD_KEYS` à mettre dans l'environnement.
 4. `npm run wallet:setup -- --set-howto` écrit le texte « Gagner des volts » (champ commun à tous, 1 crédit).
@@ -62,7 +64,13 @@ Avec `PASS_STUDIO_API_KEY`, `PASS_STUDIO_PASS_ID` (et `PASS_STUDIO_FIELD_KEYS`) 
 npm run wallet:demo -- issue    # émet la carte de Manon Blanc (1 crédit), affiche les liens Apple / Google Wallet
 npm run wallet:demo -- push     # +100 volts avec notification (1 crédit) ; 760 → 860 = passage Praticien
 npm run wallet:demo -- revoke   # révoque la carte de démo (gratuit)
+npm run wallet:demo -- cards    # liste les cartes émises et celles présentes dans un wallet (gratuit)
+npm run wallet:demo -- push --installed            # +100 volts sur la carte réellement installée
+npm run wallet:demo -- revoke --instance <id>      # révoque une carte précise
 ```
+
+Le lien de partage du pass et le bouton « Ajouter » de l'éditeur créent chacun une **nouvelle carte anonyme**
+(1 crédit). Pour installer la carte de démo, ouvrir le lien « Page d'ajout » affiché par `issue`.
 
 ## Architecture
 
