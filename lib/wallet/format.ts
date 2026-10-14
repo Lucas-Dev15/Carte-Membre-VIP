@@ -22,6 +22,12 @@ export function formatShortWhen(date: Date): string {
   return `${p.day} ${p.month} · ${formatTime(date)}`;
 }
 
+/** « 12 nov. » (recto du pass : le titre de la conférence garde la place, l'heure est au verso) */
+export function formatShortDate(date: Date): string {
+  const p = parts(date, { day: "numeric", month: "short" });
+  return `${p.day} ${p.month}`;
+}
+
 /** « jeu. 12 nov. 2026 · 18 h 30 » */
 export function formatLongWhen(date: Date): string {
   const p = parts(date, { weekday: "short", day: "numeric", month: "short", year: "numeric" });

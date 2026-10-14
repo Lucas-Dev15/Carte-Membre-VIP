@@ -50,7 +50,7 @@ describe("champs du pass", () => {
       memberName: "Manon Blanc",
       city: "Nancy",
       nextTitle: "Créer ses visuels avec l'IA",
-      nextWhen: "12 nov. · 18 h 30",
+      nextWhen: "12 nov.",
       nextFull: "jeu. 12 nov. 2026 · 18 h 30 · [Lieu], Nancy",
       memberSince: "mars 2026",
       memberCode: "RVIA-NCY-1259",
@@ -60,7 +60,7 @@ describe("champs du pass", () => {
   it("gère l'absence de réservation", () => {
     const f = buildPassFields({ ...manon, nextBooking: null }, "RVIA-NCY-1259");
     expect(f.nextTitle).toBe("Aucune réservation");
-    expect(f.nextWhen).toBe("Réservez sur rendezvousia.fr");
+    expect(f.nextWhen).toBe("—");
     expect(buildLocations({ ...manon, nextBooking: null })).toEqual([]);
   });
 

@@ -16,13 +16,9 @@ export function WalletPreview({ fields, qrSvg }: { fields: PassFields; qrSvg: st
             <img src="/wallet/rdvia-logo-mark.png" alt="" className={styles.logo} />
             Les RDV IA
           </span>
-          <div className={styles.right}>
-            <span className={styles.label}>Niveau</span>
-            <span className={styles.value}>{fields.level}</span>
-          </div>
         </div>
 
-        {/* Pass Custom : pas de bandeau sur Apple, l'éclair est la vignette ; PROGRESSION est au verso. */}
+        {/* Pass Custom : pas de bandeau sur Apple, l'éclair est la vignette ; PROGRESSION et VILLE sont au verso, NIVEAU sous les volts (le nom « Les RDV IA » reste entier). */}
         <div className={styles.main}>
           <div>
             <span className={styles.label}>Mes volts</span>
@@ -38,8 +34,8 @@ export function WalletPreview({ fields, qrSvg }: { fields: PassFields; qrSvg: st
             <span className={styles.value}>{fields.memberName}</span>
           </div>
           <div className={styles.right}>
-            <span className={styles.label}>Ville</span>
-            <span className={styles.value}>{fields.city}</span>
+            <span className={styles.label}>Niveau</span>
+            <span className={styles.value}>{fields.level}</span>
           </div>
         </div>
         <div className={styles.row}>

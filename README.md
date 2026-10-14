@@ -41,11 +41,13 @@ Le build a été vérifié : ni la clé ni l'URL de l'API ne figurent dans `.nex
    vignette 270×270). Tant que le site n'est pas en ligne, `PASS_STUDIO_ASSET_BASE_URL` pointe ailleurs (ex. raw.githubusercontent.com).
 2. Créer le modèle **dans l'éditeur The Pass Studio**, en type **Custom**, distribution `unique`, sans texte sous le QR,
    avec le design de `lib/wallet/design.ts`. Placer les champs avec exactement ces libellés (aperçu : `docs/option-custom.png`) :
-   - en-tête : NIVEAU ;
+   - en-tête : aucun (un champ d'en-tête fait tronquer « Les RDV IA » par Apple) ;
    - principal : MES VOLTS ;
-   - secondaires : MEMBRE (gauche), VILLE (droite) ;
-   - auxiliaires : PROCHAINE CONFÉRENCE (gauche), LE (droite) ;
-   - verso : PROGRESSION, MEMBRE DEPUIS, CODE MEMBRE, PROCHAINE CONFÉRENCE (VERSO), GAGNER DES VOLTS.
+   - secondaires : MEMBRE (gauche), NIVEAU (droite) ;
+   - auxiliaires : PROCHAINE CONFÉRENCE (gauche), LE (droite, date courte « 12 nov. », « — » sans réservation) ;
+   - verso : PROGRESSION, VILLE, MEMBRE DEPUIS, CODE MEMBRE, PROCHAINE CONFÉRENCE (VERSO), GAGNER DES VOLTS.
+   Les champs d'un pass Custom peuvent aussi s'écrire par l'API : `design.fields` = lignes `{ key, label, value, position }`,
+   `position` ∈ header | primary | secondary | auxiliary | back (format lu dans le générateur de The Pass Studio, non documenté).
    (`npm run wallet:setup` sans `PASS_STUDIO_PASS_ID` crée le brouillon par l'API, mais les champs se placent dans l'éditeur.)
 3. `PASS_STUDIO_PASS_ID=… npm run wallet:setup` : masque le texte sous le QR, désactive l'e-mail d'invitation de The Pass Studio, liste les clés
    du pass, les retrouve par leur libellé et affiche la valeur de `PASS_STUDIO_FIELD_KEYS` à mettre dans l'environnement.

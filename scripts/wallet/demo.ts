@@ -82,7 +82,8 @@ async function main() {
     const fields = buildPassFields(manon(after), CODE);
     const res = await client.updateFields({
       instanceId: state.instanceId,
-      fields: toPassStudioFields({ volts: fields.volts, level: fields.level, progress: fields.progress }, keyMap),
+      // Tous les champs (même push, même crédit) : la carte suit aussi les changements de format.
+      fields: toPassStudioFields(fields, keyMap),
       message,
       externalRef: `rdvia_demo_push_${after}`,
     });
