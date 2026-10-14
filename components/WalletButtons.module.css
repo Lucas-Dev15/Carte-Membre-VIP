@@ -1,0 +1,54 @@
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+.badge {
+  display: inline-flex;
+  height: 48px;
+  text-decoration: none;
+}
+.badge img {
+  height: 48px;
+  width: auto;
+}
+.placeholder {
+  display: inline-flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 18px;
+  border-radius: 10px;
+  background: #111114;
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+}
+.done {
+  text-align: center;
+  font-weight: 600;
+  color: #1e2393;
+  padding: 12px;
+}
+.desktopHint {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 14px;
+  font-size: 13px;
+  color: #4a4d6a;
+}
+.desktopHint p {
+  margin: 0;
+  max-width: 200px;
+}
+.pageQr {
+  width: 72px;
+  height: 72px;
+  flex: none;
+}
+.pageQr :global(svg) {
+  width: 100%;
+  height: 100%;
+}

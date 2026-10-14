@@ -1,0 +1,19 @@
+:root {
+  --rdv-blue: #3540d8;
+  --rdv-blue-deep: #1e2393;
+  --rdv-volt: #f9b233;
+  --ink: #111114;
+  --muted: #5b5e7a;
+  --bg: #eef0f6;
+  --surface: #ffffff;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3 { font-family: "Inter Tight", "Inter", system-ui, sans-serif; font-weight: 800; }
+a { color: var(--rdv-blue); }

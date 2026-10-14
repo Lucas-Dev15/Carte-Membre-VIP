@@ -1,0 +1,195 @@
+.scene {
+  perspective: 1100px;
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+}
+
+.float {
+  animation: float 6s ease-in-out infinite alternate;
+  transform-style: preserve-3d;
+}
+.scene:hover .float {
+  animation-play-state: paused;
+}
+
+@keyframes float {
+  from { transform: translateY(0) rotateX(5deg) rotateY(-7deg); }
+  to { transform: translateY(-8px) rotateX(-3deg) rotateY(7deg); }
+}
+
+.card {
+  --mx: 50%;
+  --my: 50%;
+  position: relative;
+  aspect-ratio: 1.586;
+  width: 100%;
+  border-radius: 18px;
+  overflow: hidden;
+  color: #fff;
+  background: linear-gradient(135deg, #3540d8 0%, #2a33b8 45%, #1e2393 100%);
+  box-shadow: 0 30px 50px -24px rgba(30, 35, 147, 0.75), inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  transform-style: preserve-3d;
+  transition: transform 0.18s ease-out;
+  font-family: "Inter", system-ui, sans-serif;
+}
+
+/* 1. Trame de points */
+.dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1.4px, transparent 1.5px);
+  background-size: 14px 14px;
+  pointer-events: none;
+}
+
+/* 2. Grand éclair en filigrane */
+.bolt {
+  position: absolute;
+  width: 170px;
+  height: 170px;
+  top: -18px;
+  right: -26px;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+/* 3. Reflet qui balaie la carte */
+.sheen {
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 40%;
+  height: 200%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+  transform: rotate(-18deg);
+  animation: sheen 5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes sheen {
+  0% { left: -60%; }
+  60%, 100% { left: 130%; }
+}
+
+/* 4. Brillance qui suit la souris */
+.glare {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--mx) var(--my), rgba(255, 255, 255, 0.22), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.18s;
+  pointer-events: none;
+}
+.card[data-active="true"] .glare {
+  opacity: 1;
+}
+
+/* 5. Contenu */
+.content {
+  position: absolute;
+  inset: 0;
+  padding: 16px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transform: translateZ(30px);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Inter Tight", "Inter", system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.1px;
+}
+.city {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.bottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+}
+.identity {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
+.voltsPill {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #111114;
+  background: #f9b233;
+  border-radius: 999px;
+  padding: 3px 8px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+.name {
+  font-family: "Inter Tight", "Inter", system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 19px;
+  line-height: 1.1;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.since {
+  font-size: 10px;
+  color: #c9ccf4;
+}
+.code {
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  font-weight: 700;
+  font-size: 11px;
+  color: #ffe7a8;
+  letter-spacing: 1.6px;
+}
+.qr {
+  flex: none;
+  width: 27%;
+  aspect-ratio: 1;
+  background: #fff;
+  border-radius: 9px;
+  padding: 5px;
+}
+.qr :global(svg) {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Mobile : flottement seul (l'inclinaison est désactivée en JS). */
+@media (prefers-reduced-motion: reduce) {
+  .float,
+  .sheen {
+    animation: none;
+  }
+  .sheen {
+    display: none;
+  }
+  .card {
+    transition: none;
+    transform: none !important;
+  }
+}
