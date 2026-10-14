@@ -14,7 +14,8 @@ export function passDesign(siteUrl: string, assetBaseUrl = `${siteUrl}/wallet`):
     description: "Carte membre Les RDV IA",
     // Logo « Rendez-vous IA » détouré de blanc : son « D » bleu disparaîtrait sinon sur le fond #3540D8.
     logoUrl: asset("rdvia-logo-rvia-150.png"),
-    iconUrl: asset("rdvia-icon-87x87.png"),
+    // Icône des notifications : logo « Rendez-vous IA » sur fond blanc (Pass Studio la réduit en 87×87).
+    iconUrl: asset("rdvia-icon-rvia-1024.png"),
     // Type Custom : Apple n'affiche pas le bandeau (il reste l'image principale sur Google Wallet).
     // Sur Apple, l'éclair passe en vignette, à droite de MES VOLTS.
     stripImageUrl: asset("rdvia-strip-1125x432.png"),
