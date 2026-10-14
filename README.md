@@ -37,11 +37,15 @@ Le build a été vérifié : ni la clé ni l'URL de l'API ne figurent dans `.nex
 ## Création du modèle de pass
 
 1. Héberger `public/wallet/*.png` en https public (servis par le site : `https://rendezvousia.fr/wallet/…`).
-   The Pass Studio télécharge les images, les vérifie et les redimensionne (icône 87×87, logo ≤ 480×150, bandeau 1125×432).
+   The Pass Studio télécharge les images, les vérifie et les redimensionne (icône 87×87, logo ≤ 480×150, bandeau 1125×432,
+   vignette 270×270). Tant que le site n'est pas en ligne, `PASS_STUDIO_ASSET_BASE_URL` pointe ailleurs (ex. raw.githubusercontent.com).
 2. Créer le modèle **dans l'éditeur The Pass Studio**, en type **Custom**, distribution `unique`, sans texte sous le QR,
-   avec le design de `lib/wallet/design.ts`. Placer les champs du §3.3 avec exactement ces libellés :
-   NIVEAU, MES VOLTS, PROGRESSION, MEMBRE, VILLE, PROCHAINE CONFÉRENCE, LE, MEMBRE DEPUIS, CODE MEMBRE,
-   PROCHAINE CONFÉRENCE (VERSO), GAGNER DES VOLTS.
+   avec le design de `lib/wallet/design.ts`. Placer les champs avec exactement ces libellés (aperçu : `docs/option-custom.png`) :
+   - en-tête : NIVEAU ;
+   - principal : MES VOLTS ;
+   - secondaires : MEMBRE (gauche), VILLE (droite) ;
+   - auxiliaires : PROCHAINE CONFÉRENCE (gauche), LE (droite) ;
+   - verso : PROGRESSION, MEMBRE DEPUIS, CODE MEMBRE, PROCHAINE CONFÉRENCE (VERSO), GAGNER DES VOLTS.
    (`npm run wallet:setup` sans `PASS_STUDIO_PASS_ID` crée le brouillon par l'API, mais les champs se placent dans l'éditeur.)
 3. `PASS_STUDIO_PASS_ID=… npm run wallet:setup` : masque le texte sous le QR, désactive l'e-mail d'invitation de The Pass Studio, liste les clés
    du pass, les retrouve par leur libellé et affiche la valeur de `PASS_STUDIO_FIELD_KEYS` à mettre dans l'environnement.
@@ -114,11 +118,16 @@ Vérifié dans la documentation The Pass Studio (integrations, errors, rate-limi
 
 **Décisions prises :**
 
-1. **Type de pass : Custom** (validé). Les types structurés (loyalty, coupon, event, generic) n'acceptent que des clés
+1. **Type de pass : Custom sans bandeau** (validé le 14/10/2026, aperçus `docs/option-custom.png` / `docs/option-loyalty.png`).
+   Sur un pass Custom, Apple n'affiche pas le bandeau (avertissement de l'éditeur) : MES VOLTS est en grand sur fond bleu
+   uni, l'éclair en vignette (`rdvia-thumbnail-270.png`) à droite ; Google Wallet garde le bandeau comme image principale.
+   Le type Fidélité affichait le bandeau mais refuse nos libellés et n'a que 8 champs fixes (testé : `design.labels` et
+   `design.extraFields` « not supported on a loyalty pass »). Le logo du pass est le carré seul (`rdvia-logo-mark.png`) :
+   le wallet écrit « Les RDV IA » à côté. Les types structurés (loyalty, coupon, event, generic) n'acceptent que des clés
    documentées (`memberName`, `points`, `tier`…) ; seul Custom permet nos 11 champs libres. Ses clés sont générées
    par l'éditeur (`field_1787677019449`), d'où `PASS_STUDIO_FIELD_KEYS`. Une clé inconnue fait échouer tout l'appel
-   (400 `unknown_field_key`) : rien ne part à moitié rempli. À vérifier dans l'éditeur : le placement en-tête /
-   principal sur le bandeau / secondaires / auxiliaires / verso.
+   (400 `unknown_field_key`) : rien ne part à moitié rempli. Les champs d'un pass Custom ne se créent que dans
+   l'éditeur : l'API n'en modifie que les valeurs.
 2. **Rien sous le QR** (validé) : `showBarcodeText: false`. La doc n'a pas de texte alternatif ; ce serait l'URL.
    Le QR encode l'URL de la carte, le code `RVIA-…` figure au verso (CODE MEMBRE).
 
@@ -131,7 +140,8 @@ Vérifié dans la documentation The Pass Studio (integrations, errors, rate-limi
    test doit être publié (10 crédits) ; on l'isole avec une clé API restreinte à ce pass.
 5. **`barcodeType`** : la doc ne liste pas les valeurs ; on laisse l'éditeur choisir QR code.
 6. **Libellé de `progress`.** La maquette met « Encore 40 pour Praticien » dans le libellé de MES VOLTS. Un libellé
-   est fixe : `progress` est un champ séparé (PROGRESSION), sous le chiffre ou en secondaire.
+   est fixe : `progress` est un champ séparé (PROGRESSION). Une carte Apple de ce type n'a que 4 champs sous le
+   principal : PROGRESSION passe au verso.
 
 Écarts côté produit :
 

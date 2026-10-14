@@ -53,6 +53,7 @@ export interface PassDesign {
   logoUrl: string;
   iconUrl: string;
   stripImageUrl: string;
+  thumbnailUrl: string;
   barcodeType?: string;
   showBarcodeText: false;
   backWebsiteUrl: string;

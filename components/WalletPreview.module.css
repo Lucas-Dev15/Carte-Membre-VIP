@@ -59,13 +59,23 @@
 .grow {
   min-width: 0;
 }
-.strip {
-  height: 94px;
-  background: url("/wallet/rdvia-strip-1125x432.png") center / cover;
-  padding: 0 12px;
+.brand {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 13px;
+}
+.main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 12px 6px;
+}
+.thumb {
+  width: 54px;
+  height: 54px;
+  flex: none;
 }
 .primary {
   font-family: "Inter Tight", "Inter", system-ui, sans-serif;

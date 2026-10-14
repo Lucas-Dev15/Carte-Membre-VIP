@@ -12,16 +12,24 @@ export function WalletPreview({ fields, qrSvg }: { fields: PassFields; qrSvg: st
       <div className={styles.pass}>
         <div className={styles.header}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/wallet/rdvia-logo-480x150.png" alt="Les RDV IA" className={styles.logo} />
+          <span className={styles.brand}>
+            <img src="/wallet/rdvia-logo-mark.png" alt="" className={styles.logo} />
+            Les RDV IA
+          </span>
           <div className={styles.right}>
             <span className={styles.label}>Niveau</span>
             <span className={styles.value}>{fields.level}</span>
           </div>
         </div>
 
-        <div className={styles.strip}>
-          <span className={styles.label}>Mes volts · {fields.progress.replace(" volts", "")}</span>
-          <span className={styles.primary}>{fields.volts}</span>
+        {/* Pass Custom : pas de bandeau sur Apple, l'éclair est la vignette ; PROGRESSION est au verso. */}
+        <div className={styles.main}>
+          <div>
+            <span className={styles.label}>Mes volts</span>
+            <span className={styles.primary}>{fields.volts}</span>
+          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/wallet/rdvia-thumbnail-270.png" alt="" className={styles.thumb} />
         </div>
 
         <div className={styles.row}>
